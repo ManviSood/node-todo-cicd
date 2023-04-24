@@ -1,4 +1,37 @@
-pipeline {
+pipeline{
+    agent { label 'dev-agent'}
+    stages{
+        stage('Code'){
+            steps{ 
+                git url: 'https://github.com/ManviSood/node-todo-cicd.git' , branch: 'master'
+                echo "Code Cloned"
+            }
+            
+        }
+        stage('Build & Test'){
+            steps{ 
+                sh "docker build -t techgirl1/node-todo-app-cicd:latest . "
+            }
+        }
+         stage('Login & Push'){
+            steps{ 
+                echo "logging into dockerhub and pushing image "
+                withCredentials([usernamePassword(credentialsId:'dockerHub',passwordVariable:'dockerHubPassword',usernameVariable:'dockerHubUser')]){
+                    sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"
+                    sh "docker push techgirl1/node-todo-app-cicd:latest"
+                }
+            }
+        }
+        stage('Deploy'){
+            steps{ 
+                sh "docker-compose down && docker-compose up -d"
+            }
+        }
+            
+    }
+}
+
+/* pipeline {
     agent { label 'dev-agent' }
     
     stages{
@@ -27,4 +60,4 @@ pipeline {
             }
         }
     }
-}
+} */
